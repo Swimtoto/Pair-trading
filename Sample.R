@@ -5,7 +5,7 @@ options(warn=-1) # Turning off warning message | options(warn=-0) to turn on
 
 DATA = read.csv("SnP500.csv", header = TRUE)
 DATA$X = as.POSIXct(DATA$X, format="%m/%d/%Y %H:%M") # Converting first column as as Date format
-WORKING_PAIRS = matrix(data = NA, ncol = 2, nrow = 124750)
+WORKING_PAIRS = matrix(data = NA, ncol = 4, nrow = 124750)
 
 cpt = 0
 
@@ -14,7 +14,7 @@ val = c(2:(dim(DATA)[2]-1))
 for(i in val) {
   for(j in (i+1):(dim(DATA)[2])) {
 
-    pair = cbind(DATA[1], DATA[i], DATA[j]) # Column 1 = Date | Replace 2 & 3 by i & j in a for loop
+    pair = cbind(DATA[1], DATA[i], DATA[j]) # Column 1 = Date
     pair = xts(pair[,-1], order.by = pair[,1]) # Converting our data frame in a xts object
     
     
@@ -29,8 +29,13 @@ for(i in val) {
     if((stationary[1] == TRUE) && (stationary[2]) == TRUE) {
       
       cpt = cpt + 1
-      WORKING_PAIRS[cpt,1] = colnames(pair)[1]
-      WORKING_PAIRS[cpt,2] = colnames(pair)[2]
+      # We save the effective pair
+      WORKING_PAIRS[cpt,2] = colnames(pair)[1]
+      WORKING_PAIRS[cpt,4] = colnames(pair)[2]
+      
+      # We save the index from the original dataset DATA
+      WORKING_PAIRS[cpt, 1] = i
+      WORKING_PAIRS[cpt, 3] = j
     }
   }
 }
