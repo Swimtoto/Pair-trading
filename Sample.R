@@ -1,11 +1,18 @@
 install.packages("PairTrading")
 library(PairTrading)
+library(caTools)
 
 options(warn=-1) # Turning off warning message | options(warn=-0) to turn on
 
-DATA = read.csv("SnP500.csv", header = TRUE)
-DATA$X = as.POSIXct(DATA$X, format="%m/%d/%Y %H:%M") # Converting first column as as Date format
-WORKING_PAIRS = matrix(data = NA, ncol = 4, nrow = 124750)
+DATASET = read.csv("SnP500.csv", header = TRUE)
+DATASET$X = as.POSIXct(DATASET$X, format="%m/%d/%Y %H:%M") # Converting first column as as Date format
+
+# Creating a sample for training set
+set.seed(211313)
+split = sample.split(DATASET, SplitRatio = 0.75)
+DATA = subset(DATASET, split == TRUE) 
+
+WORKING_PAIRS = matrix(data = NA, ncol = 4, nrow = 0)
 
 cpt = 0
 
@@ -23,28 +30,32 @@ for(i in val) {
     # ----------------------------------------
     reg = EstimateParameters(pair, method = lm)
     
-    stationary = IsStationary(reg$spread, 0.01) # Stationarity with 99% of certitude
+    stationary = IsStationary(reg$spread, 0) # Stationarity with % of certitude
     
     # We save the pair if it's stationary
     if((stationary[1] == TRUE) && (stationary[2]) == TRUE) {
       
       cpt = cpt + 1
       # We save the effective pair
-      WORKING_PAIRS[cpt,2] = colnames(pair)[1]
-      WORKING_PAIRS[cpt,4] = colnames(pair)[2]
+      WORKING_PAIRS = rbind(WORKING_PAIRS, nrow(WORKING_PAIRS)) # Add a row to the matrix
+      WORKING_PAIRS [cpt,2] = colnames(pair)[1]
+      WORKING_PAIRS [cpt,4] = colnames(pair)[2]
       
       # We save the index from the original dataset DATA
-      WORKING_PAIRS[cpt, 1] = i
-      WORKING_PAIRS[cpt, 3] = j
+      WORKING_PAIRS [cpt, 1] = i
+      WORKING_PAIRS [cpt, 3] = j
     }
   }
 }
 
 
 
+
 # ----------------------------------------
 #   PAIR TRADING RETURN ALGORITHM
 # ----------------------------------------
+
+
 window = 800
 params = EstimateParametersHistorically(pair, period = window, method = lm)
 plot(params$spread)
